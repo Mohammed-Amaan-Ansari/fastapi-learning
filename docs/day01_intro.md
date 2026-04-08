@@ -6,4 +6,4 @@
 
 ## Commands Used
 pip install fastapi uvicorn
-uvicorn day01.hello_world:app --reload
+uvicorn day_01.hello_world:app --reload
