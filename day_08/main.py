@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
-from . import models
+from . import models, schemas
 from .database import engine, SessionLocal
 
 app = FastAPI()
@@ -8,7 +8,7 @@ app = FastAPI()
 # Create tables
 models.Base.metadata.create_all(bind=engine)
 
-# Dependency
+# DB Dependency
 def get_db():
     db = SessionLocal()
     try:
@@ -17,17 +17,11 @@ def get_db():
         db.close()
 
 
-# CREATE
-@app.post("/todos/")
-def create_todo(title: str, db: Session = Depends(get_db)):
-    todo = models.Todo(title=title)
-    db.add(todo)
+# CREATE TODO
+@app.post("/todos/", response_model=schemas.TodoResponse)
+def create_todo(todo: schemas.TodoCreate, db: Session = Depends(get_db)):
+    db_todo = models.Todo(title=todo.title)
+    db.add(db_todo)
     db.commit()
-    db.refresh(todo)
-    return todo
-
-
-# READ
-@app.get("/todos/")
-def get_todos(db: Session = Depends(get_db)):
-    return db.query(models.Todo).all()
+    db.refresh(db_todo)
+    return db_todo
