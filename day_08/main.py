@@ -6,7 +6,7 @@ from .database import engine, SessionLocal
 app = FastAPI()
 
 # Create Tables
-models.Base.metadata.create_all(bind=engine)
+# models.Base.metadata.create_all(bind=engine)
 
 # Dependency
 def get_db():

@@ -15,5 +15,5 @@
 - alembic upgrade head
 - alembic downgrade
 
-## ✅ Example
+##  Example
 Added new column using migration
