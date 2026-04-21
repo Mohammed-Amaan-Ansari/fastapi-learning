@@ -4,12 +4,20 @@ from sqlalchemy.orm import Session
 from .models import models
 from .schemas import schemas
 from .db.database import engine, SessionLocal
+from fastapi import FastAPI
+from app.routers import auth, todo
 
+from app.db.database import engine
+from app.models import user
 app = FastAPI()
 
 # Create Tables
 # models.Base.metadata.create_all(bind=engine)
 
+
+user.Base.metadata.create_all(bind=engine)
+app.include_router(auth.router)
+app.include_router(todo.router)
 # Dependency
 def get_db():
     db = SessionLocal()
