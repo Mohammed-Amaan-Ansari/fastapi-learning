@@ -31,3 +31,4 @@ User → Login → Get Token → Access Protected API
 ## 🎯 Conclusion
 
 Successfully secured API endpoints using JWT authentication and dependency injection.
+ 

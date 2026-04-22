@@ -27,7 +27,8 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
 
     new_user = User(
         username=user.username,
-        password=hash_password(user.password)
+        password=hash_password(user.password),
+        role=user.role   # ✅ add role
     )
 
     db.add(new_user)
@@ -56,3 +57,11 @@ def protected_route(user: str = Depends(get_current_user)):
         "message": "You are authorized",
         "user": user
     }
+@router.get("/user-data")
+def user_data(user = Depends(get_current_user)):
+    return {"message": "User access", "user": user}
+from app.config.security import require_role
+
+@router.delete("/admin-only")
+def admin_only(user = Depends(require_role("admin"))):
+    return {"message": "Admin access granted"}
