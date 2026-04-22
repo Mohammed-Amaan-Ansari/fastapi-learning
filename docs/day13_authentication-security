@@ -1,0 +1,33 @@
+# Day 13 - Authentication & Protected Routes 🔐
+
+## 📌 What I Learned
+
+### 1. JWT Authentication
+
+* Implemented login system using tokens
+
+---
+
+### 2. Token Verification
+
+* Decoded JWT using secret key
+* Extracted user from token
+
+---
+
+### 3. Protected Routes
+
+* Used Depends(get_current_user)
+* Restricted access to authorized users
+
+---
+
+### 4. Security Flow
+
+User → Login → Get Token → Access Protected API
+
+---
+
+## 🎯 Conclusion
+
+Successfully secured API endpoints using JWT authentication and dependency injection.

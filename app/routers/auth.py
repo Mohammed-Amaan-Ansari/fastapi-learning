@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.db.database import SessionLocal
 from app.models.user import User
+from app.config.security import get_current_user
+from fastapi import Depends
 from app.schemas.user import UserCreate, UserLogin, Token
 from app.config.security import hash_password, verify_password, create_access_token
 
@@ -46,4 +48,11 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
     return {
         "access_token": token,
         "token_type": "bearer"
+    }
+
+@router.get("/protected")
+def protected_route(user: str = Depends(get_current_user)):
+    return {
+        "message": "You are authorized",
+        "user": user
     }
