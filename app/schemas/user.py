@@ -12,3 +12,10 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True
+class UserLogin(BaseModel):   # ✅ ADD THIS
+    username: str
+    password: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str

@@ -10,4 +10,4 @@ class User(Base):
     username = Column(String, unique=True, index=True)
     password = Column(String)
     role = Column(String, default="user")
-    todos = relationship("Todo", back_populates="owner")  
+    todos = relationship("app.models.todo.Todo", back_populates="owner")  

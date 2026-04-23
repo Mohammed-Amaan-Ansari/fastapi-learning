@@ -4,10 +4,11 @@ from app.db.database import Base
 
 class Todo(Base):
     __tablename__ = "todos"
+    __table_args__ = {'extend_existing': True}
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String)
     completed = Column(Boolean, default=False)
 
     user_id = Column(Integer, ForeignKey("users.id"))  # ✅ NEW 
-    owner = relationship("User", back_populates="todos") # ✅ relationship
+    owner = relationship("app.models.user.User", back_populates="todos") # ✅ relationship
