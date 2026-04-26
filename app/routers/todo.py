@@ -1,17 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import Optional, List
 
 from app.db.database import SessionLocal
 from app.models.todo import Todo
-from app.schemas.todo import TodoCreate
+from app.schemas.todo import TodoCreate, TodoResponse
 from app.config.security import get_current_user
 
 router = APIRouter()
 
-# =========================
-# DB Dependency
-# =========================
+
 def get_db():
     db = SessionLocal()
     try:
@@ -20,19 +18,14 @@ def get_db():
         db.close()
 
 
-# =========================
-# CREATE TODO
-# =========================
-@router.post("/todos/")
+# ✅ CREATE
+@router.post("/todos/", response_model=TodoResponse)
 def create_todo(
     todo: TodoCreate,
     db: Session = Depends(get_db),
     user = Depends(get_current_user)
 ):
-    new_todo = Todo(
-        title=todo.title,
-        user_id=user.id
-    )
+    new_todo = Todo(title=todo.title, user_id=user.id)
 
     db.add(new_todo)
     db.commit()
@@ -41,11 +34,8 @@ def create_todo(
     return new_todo
 
 
-# =========================
-# GET TODOS (Day 17)
-# Pagination + Filter + Search
-# =========================
-@router.get("/todos/")
+# ✅ GET (Day 17 + Day 18)
+@router.get("/todos/", response_model=List[TodoResponse])
 def get_todos(
     skip: int = 0,
     limit: int = 10,
@@ -56,24 +46,17 @@ def get_todos(
 ):
     query = db.query(Todo).filter(Todo.user_id == user.id)
 
-    # Filter by completed
     if completed is not None:
         query = query.filter(Todo.completed == completed)
 
-    # Search by title
     if keyword:
         query = query.filter(Todo.title.ilike(f"%{keyword}%"))
 
-    # Pagination
-    todos = query.offset(skip).limit(limit).all()
-
-    return todos
+    return query.offset(skip).limit(limit).all()
 
 
-# =========================
-# UPDATE TODO
-# =========================
-@router.put("/todos/{todo_id}")
+# ✅ UPDATE
+@router.put("/todos/{todo_id}", response_model=TodoResponse)
 def update_todo(
     todo_id: int,
     updated_title: str,
@@ -85,7 +68,6 @@ def update_todo(
     if not todo:
         raise HTTPException(status_code=404, detail="Todo not found")
 
-    # Ownership check
     if todo.user_id != user.id:
         raise HTTPException(status_code=403, detail="Not allowed")
 
@@ -96,9 +78,7 @@ def update_todo(
     return todo
 
 
-# =========================
-# DELETE TODO
-# =========================
+# ✅ DELETE
 @router.delete("/todos/{todo_id}")
 def delete_todo(
     todo_id: int,
@@ -110,7 +90,6 @@ def delete_todo(
     if not todo:
         raise HTTPException(status_code=404, detail="Todo not found")
 
-    # Ownership check
     if todo.user_id != user.id:
         raise HTTPException(status_code=403, detail="Not allowed")
 
