@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
-
+from app.utils.logger import logger
 from .models import models
 from .schemas import schemas
 from .db.database import engine, SessionLocal
@@ -52,3 +52,4 @@ def get_todos(db: Session = Depends(get_db)):
 app.add_exception_handler(StarletteHTTPException, http_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
+logger.info("🚀 FastAPI application started")
