@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import Optional, List
-
+from fastapi import BackgroundTasks
+from app.utils.tasks import log_todo_creation
 from app.db.database import SessionLocal
 from app.models.todo import Todo
 from app.schemas.todo import TodoCreate, TodoResponse
@@ -25,6 +26,7 @@ def get_db():
 @router.post("/todos/", response_model=TodoResponse)
 def create_todo(
     todo: TodoCreate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     user = Depends(get_current_user)
 ):
@@ -39,6 +41,13 @@ def create_todo(
     db.add(new_todo)
     db.commit()
     db.refresh(new_todo)
+
+    # ✅ Background task
+    background_tasks.add_task(
+        log_todo_creation,
+        user.id,
+        todo.title
+    )
 
     return new_todo
 
