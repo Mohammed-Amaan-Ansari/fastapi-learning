@@ -8,7 +8,8 @@ from fastapi import FastAPI
 from app.routers import auth, todo
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
-
+from app.routers import upload
+from fastapi.staticfiles import StaticFiles
 from app.exceptions.handlers import (
     http_exception_handler,
     validation_exception_handler,
@@ -53,3 +54,6 @@ app.add_exception_handler(StarletteHTTPException, http_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
 logger.info("🚀 FastAPI application started")
+
+app.include_router(upload.router)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
