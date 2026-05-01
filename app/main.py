@@ -17,11 +17,28 @@ from app.exceptions.handlers import (
 )
 from app.db.database import engine
 from app.models import user
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from fastapi.responses import JSONResponse
+
 app = FastAPI()
 
 # Create Tables
 # models.Base.metadata.create_all(bind=engine)
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
 
+
+@app.exception_handler(RateLimitExceeded)
+def rate_limit_handler(request, exc):
+    return JSONResponse(
+        status_code=429,
+        content={
+            "success": False,
+            "message": "Too many requests. Try again later."
+        }
+    )
 
 user.Base.metadata.create_all(bind=engine)
 app.include_router(auth.router)
