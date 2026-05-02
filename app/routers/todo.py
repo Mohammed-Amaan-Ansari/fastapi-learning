@@ -11,6 +11,8 @@ from app.utils.logger import logger
 from slowapi.util import get_remote_address
 from slowapi import Limiter
 from fastapi import Request
+from app.utils.cache import redis_client
+import json
 
 router = APIRouter()
 
@@ -44,6 +46,7 @@ def create_todo(
     db.add(new_todo)
     db.commit()
     db.refresh(new_todo)
+    redis_client.flushdb()
 
     # ✅ Background task
     background_tasks.add_task(
@@ -59,7 +62,9 @@ def create_todo(
 # GET TODOS
 # =========================
 @router.get("/todos/", response_model=List[TodoResponse])
+@limiter.limit("10/minute")
 def get_todos(
+    request: Request,
     skip: int = 0,
     limit: int = 10,
     completed: Optional[bool] = None,
@@ -67,7 +72,17 @@ def get_todos(
     db: Session = Depends(get_db),
     user = Depends(get_current_user)
 ):
-    logger.info(f"User {user.id} fetching todos")
+    cache_key = f"todos:{user.id}:{skip}:{limit}:{completed}:{keyword}"
+
+    # 1️⃣ Check cache
+    cached_data = redis_client.get(cache_key)
+
+    if cached_data:
+        logger.info("⚡ Returning from cache")
+        return json.loads(cached_data)
+
+    # 2️⃣ Fetch from DB
+    logger.info("📦 Fetching from DB")
 
     query = db.query(Todo).filter(Todo.user_id == user.id)
 
@@ -77,9 +92,20 @@ def get_todos(
     if keyword:
         query = query.filter(Todo.title.ilike(f"%{keyword}%"))
 
-    return query.offset(skip).limit(limit).all()
+    todos = query.offset(skip).limit(limit).all()
 
+    # 3️⃣ Store in cache
+    redis_client.setex(
+        cache_key,
+        60,  # expire in 60 seconds
+        json.dumps([{
+            "id": t.id,
+            "title": t.title,
+            "completed": t.completed
+        } for t in todos])
+    )
 
+    return todos
 # =========================
 # UPDATE TODO
 # =========================
@@ -105,6 +131,7 @@ def update_todo(
     todo.title = updated_title
     db.commit()
     db.refresh(todo)
+    redis_client.flushdb()
 
     return todo
 
@@ -132,5 +159,6 @@ def delete_todo(
 
     db.delete(todo)
     db.commit()
+    redis_client.flushdb()
 
     return {"message": "Todo deleted successfully"}
