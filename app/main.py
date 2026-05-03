@@ -21,7 +21,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from fastapi.responses import JSONResponse
-
+from app.routers import websocket
 app = FastAPI()
 
 # Create Tables
@@ -29,7 +29,7 @@ app = FastAPI()
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 
-
+app.include_router(websocket.router)
 @app.exception_handler(RateLimitExceeded)
 def rate_limit_handler(request, exc):
     return JSONResponse(
